@@ -1,0 +1,56 @@
+--- 
+version: "3"
+services: 
+  mattermost: 
+    depends_on: 
+      - postgres
+    env_file: 
+      - .env
+    image: "mattermost/mattermost-team-edition:7.3"
+    user: "ccp"
+    pids_limit: 200
+    ports: 
+      - "8065:8065"
+    read_only: false
+    restart: unless-stopped
+    security_opt: 
+      - "no-new-privileges:true"
+    tmpfs: 
+      - /tmp
+    volumes: 
+      - "/opt/docker/docker_data/mattermost/config:/mattermost/config:rw"
+      - "/opt/docker/docker_data/mattermost/data:/mattermost/data:rw"
+      - "/opt/docker/docker_data/mattermost/logs:/mattermost/logs:rw"
+      - "/opt/docker/docker_data/mattermost/plugins:/mattermost/plugins:rw"
+      - "/opt/docker/docker_data/mattermost/client/plugins:/mattermost/client/plugins:rw"
+      - "/opt/docker/docker_data/mattermost/bleve-indexes:/mattermost/bleve-indexes:rw"
+  postgres: 
+    env_file: 
+      - .env
+    image: "postgres:14.5"
+    pids_limit: 100
+    read_only: true
+    restart: unless-stopped
+    security_opt: 
+      - "no-new-privileges:true"
+    tmpfs: 
+      - /tmp
+    volumes: 
+      - "/opt/docker/docker_data/postgresql/data:/var/lib/postgresql/data"
+      - "lock:/var/run/postgresql"
+    onlyoffice:
+      image: onlyoffice/documentserver
+      container_name: onlyoffice
+      ports:
+        - "8081:80"
+      environment:
+        - JWT_ENABLED=true
+        - JWT_SECRET=lC4DbHn4MvC3LjN72fV4flreUVBX5WuG
+      volumes:
+        - ./onlyoffice_data:/var/www/onlyoffice/Data
+        - ./onlyoffice_logs:/var/log/onlyoffice
+        - ./db:/var/lib/postgresql
+        - ./lib:/var/lib/onlyoffice
+      restart: unless-stopped
+volumes: 
+  lock: ~
